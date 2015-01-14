@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+	
+	<!-- 属性文件读入 -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:resource/config/jdbc.properties</value>
+			</list>
+		</property>
+	</bean> 
+
+	<!-- 扫描com及子包，自动实例化带@注释的实例，这里排除@Controller，所有controller的实例化在spring-mvc.xml中完成 --> 
+	<context:component-scan base-package="com">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>	
+	
+	<!-- 1.配置数据源:dataSource -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+    	<property name="driverClassName" value="${jdbc.driverClassName}"></property>
+    	<property name="url" value="${jdbc.url}"></property>
+    	<property name="username" value="${jdbc.username}"></property>
+    	<property name="password" value="${jdbc.password}"></property>
+	</bean>
+	
+	<!-- 配置SessionFactory -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<!-- 引入映射文件 -->
+	  	<property name="packagesToScan" value="com.qijiabin.entity"></property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+				<prop key="hibernate.cache.use_query_cache">${hibernate.cache.use_query_cache}</prop>
+				<prop key="hibernate.cache.use_second_level_cache">${hibernate.cache.use_second_level_cache}</prop>
+				<prop key="hibernate.cache.provider_class">${hibernate.cache.provider_class}</prop>
+				<prop key="hibernate.cache.provider_configuration_file_resource_path">/resource/ehcache-hibernate.xml</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<!-- 配置hibernate模板 -->
+    <bean id="hibernateTemplete" class="org.springframework.orm.hibernate3.HibernateTemplate">
+   		  <property name="sessionFactory" ref="sessionFactory"></property>
+    </bean>
+	
+	<!-- 配置spring声明式事务 -->
+	<!-- 配置事务管理器 -->
+	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"/>
+	</bean>
+	<!-- 基于类的代理将起作用（这时需要cglib库） -->
+	<aop:config proxy-target-class="true" />
+	
+
+	<!-- tx:annotation 自动配置事务 -->  
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	
+</beans>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+				http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+				http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+	<!-- 实体bean -->
+	<bean id="myTriggerTest" class="com.qijiabin.trigger.TriggerTest"></bean>
+
+	<!-- 定时程序入口 -->
+	<bean autowire="no"   
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+               <ref local="MyTigger"/><!--MQ定时发送数据 -->
+			</list>
+		</property>
+	</bean>
+
+	<!-- MQ定时发送数据 -->
+	<bean id="MyTigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">  
+        <property name="jobDetail"><ref bean="MyTiggerTask" /></property> 
+        <property name="startDelay"><value>3000</value></property>  <!-- 服务器启动以后的30秒来调度任务; -->
+        <property name="repeatInterval"><value>18000000</value></property>  <!-- 每5小时调度一次; -->
+          <!--  <property name="cronExpression"><value>0 10 05 ? * *</value></property>  --> <!-- 每天5:10执行该job任务; -->
+    </bean>  
+
+	<!-- MQ定时发送数据-定时到具体类方法 -->
+	<bean id="MyTiggerTask"   
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject"><ref local="myTriggerTest" /></property>
+		<property name="targetMethod"><value>execute</value></property>
+		<property name="concurrent"><value>false</value></property>
+	</bean>	
+	
+	
+
+</beans>

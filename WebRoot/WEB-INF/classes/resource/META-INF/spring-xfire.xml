@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<beans>
+	<!-- 传统方式下XFire-Spring导出POJO为Web服务的配置文件-->
+	<import resource="classpath:org/codehaus/xfire/spring/xfire.xml" />
+    
+    <!--XFire WebService 基类-->
+	<bean id="baseWebService" class="org.codehaus.xfire.spring.remoting.XFireExporter" lazy-init="false"
+		  abstract="true">
+		<property name="serviceFactory" ref="xfire.serviceFactory"/>
+		<property name="xfire" ref="xfire"/>
+	</bean>
+	 
+    
+    <!-- 强制措施报备WebService接口 start -->
+    <bean id="IUser" parent="baseWebService">
+    	<property name="serviceBean" ref="UserImpl" />
+    	<property name="serviceClass" value="com.qijiabin.webservice.IUser"/>
+    </bean>
+    <bean id="UserImpl" class="com.qijiabin.webservice.UserImpl"/>
+</beans>
